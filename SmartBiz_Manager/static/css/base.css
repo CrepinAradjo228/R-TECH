@@ -1,0 +1,59 @@
+/* Style de base pour la sidebar */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 250px; /* Largeur de la sidebar */
+    background-color:#fff; /* Couleur de fond */
+    color: #111;
+    padding: 20px 0;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Pour s'assurer qu'elle reste au-dessus des autres éléments */
+    overflow-y: auto; /* Ajoute un scroll si le contenu est trop long */
+}
+
+/* Style pour le contenu principal */
+.main-content {
+    margin-left: 250px; /* Doit correspondre à la largeur de la sidebar */
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Style du logo */
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 0 20px 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Style des éléments du menu */
+.menu-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #34495e;
+}
+
+.menu-item.active {
+    background-color: #3498db;
+}
+
+.icon {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+}
