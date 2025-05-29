@@ -2,9 +2,9 @@
 {% load static %}
 {% block content %}
 <div class="container mt-5" style="align-items: center;">
-  <h1 class="mb-4">Gestion des articles </h1>
-  
-
+  <div class="stock-header">
+    <h2 class="stock-title">Gestion de stock</h2>
+  </div>
   <h2 style="text-align: center;">Liste des articles </h2>
   <table class="table">
     <thead>
@@ -19,27 +19,112 @@
       </tr>
     </thead>
     <tbody>
+      {% for article in articles %}
       <tr>
-        <td><img src="" alt="Image article" class="img-thumbnail" style="width: 50px;"></td>
-        <td>Nom de l'article</td>
-        <td>Description de l'article</td>
-        <td>0.00 franc</td>
-        <td>0</td>
-        <td>Catégorie</td>
         <td>
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary btn-sm">Modifier</button>
-            <button type="button" class="btn btn-danger btn-sm">Supprimer</button>
+          {% if article.image %}
+            <img src="{{ article.image.url }}" alt="Image article" class="img-thumbnail" style="width: 50px;">
+          {% else %}
+            <img src="{% static 'img/default.png' %}" alt="Image article" class="img-thumbnail" style="width: 50px;">
+          {% endif %}
+        </td>
+        <td>{{ article.nom }}</td>
+        <td>{{ article.description }}</td>
+        <td>{{ article.prix_unitaire }} franc</td>
+        <td>{{ article.quantite_stock }}</td>
+        <td>{{ article.categorie }}</td>
+        <td>
+          <div class="d-flex align-items-center">
+            <a href="{% url 'modifier_article' article.pk %}" class="btn btn-warning btn-sm text-white me-2">
+              <i class="fas fa-pen"></i> Modifier
+            </a>
+            <a href="{% url 'supprimer_article' article.pk %}" class="btn btn-danger btn-sm">
+              <i class="fas fa-trash"></i> Supprimer
+            </a>
           </div>
         </td>
       </tr>
+      {% endfor %}
     </tbody>
   </table>
 
   <!-- Boutons d'action généraux -->
   <div class="mt-3">
-    <a href="{% url 'ajout_article' %}" class="btn btn-primary">Ajouter un article</a>
-    <button class="btn btn-secondary">Exporter les articles </button>
+    <a href="{% url 'ajout_article' %}" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Ajouter un article
+    </a>
   </div>
 </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+/* En-tête flex pour titre + bouton */
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.stock-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+}
+.btn-qrcode {
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.btn-qrcode:hover {
+  background-color: #1d4ed8;
+}
+
+/* Tableau épuré */
+.table, .stock-table {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  width: 100%;
+  margin: 0 auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table th, .table td, .stock-table th, .stock-table td {
+  padding: 1rem 1.2rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 1rem;
+}
+.table th, .stock-table th {
+  color: #555;
+  background: #fafbfc;
+  font-weight: 600;
+}
+.table tr:last-child td, .stock-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Sidebar active */
+.sidebar .menu-item.active, .sidebar .menu-item:focus, .sidebar .menu-item:hover {
+  background: #e8f0fe;
+  color: #2563eb !important;
+  border-radius: 8px;
+}
+
+/* Pour le responsive */
+@media (max-width: 600px) {
+  .stock-header { flex-direction: column; gap: 1rem; }
+  .table th, .table td, .stock-table th, .stock-table td { padding: 0.5rem; }
+}
+
+.d-flex {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+</style>
 {% endblock %}
