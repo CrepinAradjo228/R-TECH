@@ -71,7 +71,7 @@
                   <tr>
                     <td class="text-center">{{ article.id }}</td>
                     <td>{{ article.nom }}</td>
-                    <td class="text-end">{{ article.prix }} FCFA</td>
+                    <td class="text-end">{{ article.prix_unitaire }} FCFA</td>
                     <td class="text-center">
                       <a href="{% url 'ajouter_au_panier' article.id %}" class="btn btn-outline-success btn-sm">
                         Ajouter {{ article.nom }}

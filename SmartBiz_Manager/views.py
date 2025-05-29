@@ -49,7 +49,7 @@ def ajouter_au_panier(request, article_id):
 
     request.session['panier'] = panier
     messages.success(request, f"Article {article.nom} ajouté au panier.")
-    return redirect('index')
+    return redirect('ventes')
 
 
 # Afficher le panier
