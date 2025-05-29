@@ -12,6 +12,9 @@ urlpatterns = [
 
     path('gestion_ventes/', views.ventes, name='ventes'),
     path('articles/', views.articles, name='articles'),
-    path('ajout_article/', views.ajout_article, name='ajout_article')
+    path('ajout_article/', views.ajout_article, name='ajout_article'),
+
+        #chemin pour les analyses
+    path('analyse/', views.analyse, name='analyse'),
 
 ]

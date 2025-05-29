@@ -25,3 +25,8 @@ def ajout_article(request):
         form = ArticleForm()
     return render(request, 'gestion_articles/ajout_article.html', {'form': form})
 
+
+def analyse(request):
+       
+    return render(request, 'analyse/dashboard.html')
+
