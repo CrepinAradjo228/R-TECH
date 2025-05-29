@@ -20,7 +20,7 @@ def home(request):
 
 def index(request):
     articles = Article.objects.all()
-    return render(request, 'vente/index.html', {'articles': articles})
+    return render(request, 'gestion_vente/index.html', {'articles': articles})
 
 
 #### debut vue des paniers
@@ -125,8 +125,7 @@ def valider_vente(request):
 def dashboard(request):
     return render(request, 'gestion_vente/dashboard_vente.html')
 
-def ventes(request):
-    return render(request, 'gestion_vente/index.html')
+
 
 def articles(request):
     articles = Article.objects.all()
