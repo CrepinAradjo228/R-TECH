@@ -37,14 +37,15 @@ def afficher_panier(request):
 # Ajouter un article au panier
 def ajouter_au_panier(request, article_id):
     panier = request.session.get('panier', {})
-
     article = get_object_or_404(Article, id=article_id)
+
     if str(article_id) in panier:
         panier[str(article_id)]['quantite'] += 1
     else:
         panier[str(article_id)] = {
             'quantite': 1,
-            'prix_unitaire': str(article.prix_unitaire)
+            'prix_unitaire': str(article.prix_unitaire),
+            'nom': article.nom  # Ajoutez le nom de l'article ici
         }
 
     request.session['panier'] = panier
@@ -57,11 +58,11 @@ def afficher_panier(request):
     panier = request.session.get('panier', {})
     total = 0
 
-    for item in panier.values():
-        item['total'] = round(Decimal(item['quantite']) * Decimal(item['prix_unitaire']), 2)
-        total += item['total']
+    # Calcul du total du panier
+    for article_id, details in panier.items():
+        total += details['quantite'] * float(details['prix_unitaire'])
 
-    return render(request, 'vente/panier.html', {'panier': panier, 'total': total})
+    return render(request, 'gestion_vente/panier.html', {'panier': panier, 'total': total})
 
 # Modifier la quantité d’un article
 def modifier_quantite_panier(request, article_id):
