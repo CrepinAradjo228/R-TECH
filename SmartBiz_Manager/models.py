@@ -12,7 +12,7 @@ class Article(models.Model):
     """
     Modèle pour les articles à afficher
     """
-    image = models.ImageField(upload_to='articles/')
+    image = models.ImageField(upload_to='articles/', blank=True, null=True)
     nom = models.CharField(max_length=100)
     description = models.TextField()
     prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
