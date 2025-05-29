@@ -30,3 +30,5 @@ def analyse(request):
        
     return render(request, 'analyse/dashboard.html')
 
+
+

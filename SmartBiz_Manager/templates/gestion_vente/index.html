@@ -76,10 +76,10 @@
                             </thead>
                             <tbody>
                                 <!-- Lignes des produits... -->
+                                 {{produit as produits}}
                                 <tr>
-                                    <td class="text-center">1</td>
-                                    <td>T-shirt</td>
-                                    <td class="text-end">20 €</td>
+                                    <td class="text-center">{{produit.nom}}</td>
+                                    <td class="text-end">{{produit.prix_unitaire}}</td>
                                     <td class="text-center"><button class="btn btn-outline-success btn-sm">Ajouter T-shirt</button></td>
                                 </tr>
                                 <!-- ... autres lignes de produits ... -->
@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-muted">
-                    Total articles: 10
+                    {{total_articles}}
                 </div>
             </div>
         </div>
