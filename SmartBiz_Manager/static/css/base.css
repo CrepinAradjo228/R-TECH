@@ -1,21 +1,19 @@
-/* Style de base pour la sidebar */
 .sidebar {
     position: fixed;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 250px; /* Largeur de la sidebar */
-    background-color:#fff; /* Couleur de fond */
+    width: 250px;
+    background-color: #fff; 
     color: #111;
     padding: 20px 0;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000; /* Pour s'assurer qu'elle reste au-dessus des autres éléments */
-    overflow-y: auto; /* Ajoute un scroll si le contenu est trop long */
+    z-index: 1000; 
+    overflow-y: auto; 
 }
 
-/* Style pour le contenu principal */
 .main-content {
-    margin-left: 250px; /* Doit correspondre à la largeur de la sidebar */
+    margin-left: 250px;
     padding: 20px;
     min-height: 100vh;
 }
@@ -26,7 +24,7 @@
     font-weight: bold;
     padding: 0 20px 20px;
     margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Style des éléments du menu */
@@ -36,6 +34,8 @@
     align-items: center;
     cursor: pointer;
     transition: background-color 0.3s;
+    text-decoration: none; /* Supprime la décoration des liens */
+    color: black; /* Couleur du texte en noir */
 }
 
 .menu-item:hover {
@@ -44,6 +44,7 @@
 
 .menu-item.active {
     background-color: #3498db;
+    color: white; /* Texte en blanc pour l'élément actif */
 }
 
 .icon {
@@ -54,6 +55,14 @@
 
 .divider {
     height: 1px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.1);
     margin: 15px 0;
+}
+.stat-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 15px 0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
 }
