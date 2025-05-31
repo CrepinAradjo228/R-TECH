@@ -35,7 +35,7 @@ class Vente(models.Model):
     prixTotal = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(auto_now=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"Vente {self.id} - {self.date}"
     
 class LigneCommande(models.Model):

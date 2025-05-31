@@ -12,6 +12,10 @@ from decimal import Decimal
 from django.utils import timezone
 from django.http import JsonResponse
 from django.utils.timezone import now
+from django.db.models import Sum, Count
+from SmartBiz_Manager.models import Vente, LigneCommande, Article
+import json
+import datetime
 
 
 
@@ -332,9 +336,73 @@ def ajout_article(request):
     return render(request, 'gestion_articles/ajout_article.html', {'form': form})
 
 
+
 def analyse(request):
-       
-    return render(request, 'analyse/dashboard.html')
+    mois_selectionne = request.GET.get('mois', '')  # format attendu : 'YYYY-MM'
+
+    # Récupération de toutes les ventes
+    ventes = Vente.objects.all()
+
+    # Extraction des mois disponibles dynamiquement au format 'YYYY-MM'
+    mois_disponibles = ventes.dates('date', 'month').values_list('date', flat=True)
+    mois_disponibles = sorted(set(dt.strftime('%Y-%m') for dt in mois_disponibles))
+
+    # Filtrer selon le mois sélectionné
+    if mois_selectionne and mois_selectionne in mois_disponibles:
+        annee, mois = map(int, mois_selectionne.split('-'))
+        ventes_filtrees = ventes.filter(date__year=annee, date__month=mois)
+    else:
+        ventes_filtrees = ventes
+
+    # Calcul du chiffre d'affaires total (filtré)
+    chiffre_affaire = ventes_filtrees.aggregate(total=Sum('prixTotal'))['total'] or Decimal('0')
+
+    # Total articles vendus (filtré via lignes commandes liées aux ventes filtrées)
+    ids_ventes = ventes_filtrees.values_list('id', flat=True)
+    total_articles_vendus = LigneCommande.objects.filter(vente_id__in=ids_ventes).aggregate(total=Sum('quantite'))['total'] or 0
+
+    # Nombre de clients (ventes uniques) dans la période
+    total_clients = ventes_filtrees.count()
+
+    # Bénéfice net : 30% du chiffre d'affaire
+    benefice_net = chiffre_affaire * Decimal('0.3')
+
+    # Ventes par mois (pour tous les mois disponibles, ou filtrés ? ici on fait tous)
+    ventes_par_mois = {}
+    for vente in ventes:
+        mois_str = vente.date.strftime('%b %Y')  # ex: "Mai 2025"
+        ventes_par_mois[mois_str] = ventes_par_mois.get(mois_str, 0) + float(vente.prixTotal)
+
+    mois_labels = list(ventes_par_mois.keys())
+    ventes_mensuelles = list(ventes_par_mois.values())
+
+    # Top 5 produits (sur toutes les ventes, ou filtrées ? ici sur ventes filtrées)
+    lignes = LigneCommande.objects.filter(vente_id__in=ids_ventes).values('article__nom').annotate(
+        quantite_totale=Sum('quantite')
+    ).order_by('-quantite_totale')[:5]
+
+    produits = [ligne['article__nom'] for ligne in lignes]
+    quantites = [ligne['quantite_totale'] for ligne in lignes]
+
+    context = {
+        'chiffre_affaire': chiffre_affaire,
+        'total_articles_vendus': total_articles_vendus,
+        'total_clients': total_clients,
+        'benefice_net': benefice_net,
+
+        'mois_labels': json.dumps(mois_labels),
+        'ventes_mensuelles': json.dumps(ventes_mensuelles),
+
+        'produits': json.dumps(produits),
+        'quantites': json.dumps(quantites),
+
+        'mois_selectionne': mois_selectionne,
+        'mois_disponibles': mois_disponibles,
+    }
+
+    return render(request, 'analyse/dashboard.html', context)
+
+
 
 
 def modifier_article(request, pk):
@@ -354,5 +422,7 @@ def supprimer_article(request, pk):
         article.delete()
         return redirect('articles')
     return render(request, 'gestion_articles/supprimer_article.html', {'article': article})
+
+
 
 
