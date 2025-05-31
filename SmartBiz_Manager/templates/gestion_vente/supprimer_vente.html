@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Carte de confirmation -->
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmation de suppression
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title">Vente #{{ vente.id }}</h5>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Vous êtes sur le point de supprimer définitivement cette vente :
+                    </div>
+                    
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item">
+                            <strong>Date :</strong> {{ vente.date|date:"d/m/Y" }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Nombre d'articles :</strong> {{ vente.nombreArticles }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Montant total :</strong> {{ vente.prixTotal }} €
+                        </li>
+                    </ul>
+                    
+                    <form method="POST" action="{% url 'supprimer_vente' vente.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'detail_vente' vente.id %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-1"></i> Confirmer la suppression
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Style supplémentaire -->
+<style>
+    .card {
+        border-width: 2px;
+    }
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+    }
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}

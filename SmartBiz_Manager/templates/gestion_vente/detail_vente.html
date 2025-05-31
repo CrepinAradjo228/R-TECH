@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête avec ombre portée et effet de relief -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold text-dark mb-0">Détails de la vente</h1>
+            <p class="text-muted mb-0">Référence #{{ vente.id }}</p>
+        </div>
+        <div class="badge bg-primary text-white fs-6 p-3 shadow-sm">
+            <i class="fas fa-calendar-alt me-2"></i>
+            {{ vente.date|date:"d F Y"|title }}
+        </div>
+    </div>
+
+    <!-- Cartes de synthèse -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-start border-primary border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted text-uppercase small">Articles</h5>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-boxes text-primary fs-1 me-3"></i>
+                        <div>
+                            <p class="mb-0 fs-2 fw-bold">{{ vente.nombreArticles }}</p>
+                            <p class="text-muted mb-0">unités vendues</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-start border-success border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted text-uppercase small">Total HT</h5>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-coins text-success fs-1 me-3"></i>
+                        <div>
+                            <p class="mb-0 fs-2 fw-bold">{{ vente.prixTotal|floatformat:2 }} FCFA</p>
+                            <p class="text-muted mb-0">Montant global</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-start border-info border-4 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted text-uppercase small">Panier moyen</h5>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-chart-line text-info fs-1 me-3"></i>
+                        <div>
+                            <p class="mb-0 fs-2 fw-bold">
+                                {% widthratio vente.prixTotal vente.nombreArticles 1 as panier_moyen %}
+                                {{ panier_moyen|floatformat:2 }} FCFA
+                            </p>
+                            <p class="text-muted mb-0">par article</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des articles avec effet de survol -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-list-ul text-primary me-2"></i>
+                Détail des articles
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" style="width: 40%;">Article</th>
+                            <th class="text-center" style="width: 15%;">Quantité</th>
+                            <th class="text-end" style="width: 20%;">Prix unitaire</th>
+                            <th class="text-end pe-4" style="width: 25%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in lignes %}
+                        <tr class="position-relative">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    {% if ligne.article.image %}
+                                    <img src="{{ ligne.article.image.url }}" 
+                                         alt="{{ ligne.article.nom }}" 
+                                         class="rounded me-3" 
+                                         width="40" 
+                                         height="40">
+                                    {% else %}
+                                    <div class="rounded bg-secondary text-white d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ ligne.article.nom }}</h6>
+                                        <small class="text-muted">{{ ligne.article.categorie }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary rounded-pill px-3 py-2">
+                                    {{ ligne.quantite }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                {{ ligne.prix_unitaire|floatformat:2 }} FCFA
+                            </td>
+                            <td class="text-end pe-4 fw-bold">
+                                {{ ligne.total_ligne|floatformat:2 }} FCFA
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page avec boutons d'action -->
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="{% url 'ventes' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Retour à la liste
+        </a>
+        <div>
+            <a href="#" class="btn btn-outline-primary me-2">
+                <i class="fas fa-print me-2"></i> Imprimer
+            </a>
+            <a href="#" class="btn btn-outline-danger">
+                <i class="fas fa-file-pdf me-2"></i> Export PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Styles personnalisés -->
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    
+    .badge.bg-primary {
+        letter-spacing: 0.5px;
+    }
+    
+    .border-start {
+        border-left-width: 4px !important;
+    }
+</style>
+{% endblock %}

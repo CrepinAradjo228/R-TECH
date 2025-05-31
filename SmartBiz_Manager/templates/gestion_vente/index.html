@@ -2,186 +2,458 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5" style="align-items: center;">
-  <h1 class="mb-4 text-center">Gestion des ventes</h1>
-  <p>Bienvenue dans le module de gestion des ventes. Ici, vous pouvez suivre vos transactions, gérer les clients et analyser les performances de vente.</p>
-
-  <div class="container mt-4">
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card text-white bg-primary mb-4 shadow-lg border-0 rounded-3 h-100">
-          <div class="card-header bg-transparent d-flex justify-content-center">
-            <h5 class="card-title fw-bold"><i class="fas fa-chart-line me-2"></i>Chiffre d'affaire</h5>
-          </div>
-          <div class="card-body text-center py-4">
-            <h2 class="display-8 fw-bold mb-1">{{ chiffre_affaire }} €</h2>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card text-white bg-warning mb-4 shadow-lg border-0 rounded-3 h-100">
-          <div class="card-header bg-transparent d-flex justify-content-center">
-            <h5 class="card-title fw-bold"><i class="fas fa-euro-sign me-2"></i>Ventes</h5>
-          </div>
-          <div class="card-body text-center py-4">
-            <h2 class="display-8 fw-bold mb-1">{{ total_ventes }} FCFA</h2>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-4">
-        <div class="card text-white bg-danger mb-4 shadow-lg border-0 rounded-3 h-100">
-          <div class="card-header bg-transparent d-flex justify-content-center">
-            <h5 class="card-title fw-bold"><i class="fas fa-calendar-day me-2"></i>Ventes du jour</h5>
-          </div>
-          <div class="card-body text-center py-4">
-            <h2 class="display-8 fw-bold mb-1">{{ ventes_du_jour }}</h2>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="container mt-5"> 
-  <h2>Liste des produits</h2>
-  <div class="content flex-grow-1 p-4">
-    <h2>Point de vente</h2>
-    <a href="{% url 'afficher_panier'  %}" class="btn btn-outline-success btn-sm">
-      <i class="fas fa-shopping-cart"></i> Voir le panier
-    </a>
-    <div class="row">
-      <!-- Colonne des produits -->
-      <div class="col-lg-8 col-md-7">
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Catalogue Produits</h5>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th class="text-center">ID</th>
-                    <th>Nom de l'article</th>
-                    <th class="text-end">Prix unitaire</th>
-                    <th class="text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for article in articles %}
-                  <tr>
-                    <td class="text-center">{{ article.id }}</td>
-                    <td>{{ article.nom }}</td>
-                    <td class="text-end">{{ article.prix_unitaire }} FCFA</td>
-                    <td class="text-center">
-                      <a href="{% url 'ajouter_au_panier' article.id %}" class="btn btn-outline-success btn-sm">
-                        Ajouter {{ article.nom }}
-                      </a>
-                    </td>
-                  </tr>
-                  {% empty %}
-                  <tr>
-                    <td colspan="4" class="text-center">Aucun article disponible.</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card-footer text-muted">
-            Total articles : {{ articles|length }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Colonne panier -->
-      <div class="col-lg-4 col-md-5">
-        <div class="card mb-4">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Panier</h5>
-          </div>
-          <ul class="list-group list-group-flush">
-            {% if panier.items %}
-              {% for item in panier.items %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ item.article.nom }} x{{ item.quantite }}
-                <span>{{ item.prix_total }} FCFA</span>
+<div class="container-fluid px-4 py-5">
+    <!-- En-tête élégant avec introduction -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                  <a href="{% url 'modifier_quantite_panier' item.article.id %}?action=moins" class="btn btn-sm btn-outline-secondary me-1">-</a>
-                  <a href="{% url 'modifier_quantite_panier' item.article.id %}?action=plus" class="btn btn-sm btn-outline-secondary">+</a>
-                  <a href="{% url 'supprimer_du_panier' item.article.id %}" class="btn btn-sm btn-outline-danger ms-2">×</a>
+                    <h1 class="display-5 fw-bold text-dark mb-2">Tableau de Bord des Ventes</h1>
+                    <p class="lead text-muted mb-0">Suivi complet de votre activité commerciale</p>
                 </div>
-              </li>
-              {% endfor %}
-              <li class="list-group-item d-flex justify-content-between align-items-center bg-light fw-bold">
-                Total
-                <span>{{ panier.total }} FCFA</span>
-              </li>
-            {% else %}
-              <li class="list-group-item text-center">Le panier est vide.</li>
-            {% endif %}
-          </ul>
-          <div class="card-footer">
-            {% if panier.items %}
-              <a href="{% url 'valider_vente' %}" class="btn btn-primary w-100">Valider la vente</a>
-            {% else %}
-              <button class="btn btn-primary w-100" disabled>Valider la vente</button>
-            {% endif %}
-          </div>
+                <div class="text-end">
+                    <a href="{% url 'afficher_panier' %}" class="btn btn-outline-dark">
+                        <i class="fas fa-shopping-cart me-2"></i>Voir le panier
+                    </a>
+                </div>
+            </div>
+            <hr class="border-2 border-top border-light">
         </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<div class="container-fluid p-4">
-  <div class="row">
-    <div class="col-lg-8 col-md-10 mx-auto">
-      <div class="card shadow-sm">
-        <div class="card-header bg-secondary text-white d-flex justify-content-between">
-          <h5 class="mb-0">Historique des ventes</h5>
-        </div>
-        <div class="card-body p-4">
-          <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle mb-0">
-              <thead class="table-dark">
-                <tr>
-                  <th class="text-center" style="width: 10%">#ID</th>
-                  <th class="text-center" style="width: 25%">Montant</th>
-                  <th class="text-center" style="width: 25%">Date</th>
-                  <th class="text-center" style="width: 20%">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for vente in historique_ventes %}
-                <tr>
-                  <th class="text-center">{{ vente.id }}</th>
-                  <td class="text-end fw-bold">{{ vente.montant }} FCFA</td>
-                  <td class="text-center">
-                    <span class="badge bg-light text-dark">{{ vente.date|date:"d/m/Y" }}</span>
-                  </td>
-                  <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                      <a href="{% url 'details_vente' vente.id %}" class="btn btn-outline-info" title="Détails"><i class="fas fa-eye"></i></a>
-                      <a href="{% url 'facture_vente' vente.id %}" class="btn btn-outline-primary" title="Facture"><i class="fas fa-file-invoice"></i></a>
-                      <a href="{% url 'supprimer_vente' vente.id %}" class="btn btn-outline-danger" title="Supprimer" onclick="return confirm('Confirmer la suppression ?')"><i class="fas fa-trash-alt"></i></a>
+    <!-- Cartes de statistiques -->
+    <div class="row g-4 mb-5">
+        <!-- Carte Chiffre d'Affaires -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 rounded-4 overflow-hidden h-100 transition-all hover-scale">
+                <div class="card-body p-4 position-relative">
+                    <!-- Fond décoratif subtil -->
+                    <div class="position-absolute top-0 end-0 opacity-10">
+                        <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#4e79ff" d="M45.2,-58.3C59.1,-49.3,71.3,-36.4,75.6,-20.6C79.9,-4.7,76.3,14.1,66.9,30.1C57.5,46.1,42.4,59.4,24.5,68.9C6.6,78.4,-14.1,84.1,-31.9,78.3C-49.7,72.5,-64.6,55.2,-71.4,35.1C-78.2,15,-76.9,-7.9,-67.8,-26.3C-58.7,-44.7,-41.8,-58.6,-24.3,-66.3C-6.8,-74,11.3,-75.5,25.8,-69.1Z" transform="translate(100 100)"/>
+                        </svg>
                     </div>
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="4" class="text-center">Aucune vente enregistrée.</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+                    
+                    <div class="d-flex align-items-center position-relative">
+                        <div class="bg-primary-soft p-3 rounded-3 me-3">
+                            <i class="fas fa-chart-line text-primary fs-3"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="text-uppercase text-muted mb-1 fw-semibold small">Chiffre d'affaires</h6>
+                            <div class="d-flex align-items-baseline">
+                                <h2 class="mb-0 display-6 fw-bold">{{ chiffre_affaire|floatformat:2 }}</h2>
+                                <span class="ms-2 fs-5">FCFA</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
         </div>
-      </div>
+    
+        <!-- Carte Total des Ventes -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 rounded-4 overflow-hidden h-100 transition-all hover-scale">
+                <div class="card-body p-4 position-relative">
+                    <div class="position-absolute top-0 end-0 opacity-10">
+                        <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#f6c23e" d="M42.5,-58.8C55.3,-49.4,65.9,-37.1,71.3,-22.3C76.7,-7.5,76.9,9.8,69.8,24.2C62.7,38.6,48.3,50.1,32.4,59.7C16.5,69.3,-0.9,77,-16.2,73.8C-31.5,70.6,-44.7,56.5,-55.6,40.6C-66.5,24.7,-75.1,7.1,-73.6,-9.5C-72.1,-26.1,-60.5,-41.6,-45.8,-50.6C-31.1,-59.6,-13.5,-62.1,1.8,-64.3C17.1,-66.5,34.2,-68.3,42.5,-58.8Z" transform="translate(100 100)"/>
+                    </svg>
+                    </div>
+                    
+                    <div class="d-flex align-items-center position-relative">
+                        <div class="bg-warning-soft p-3 rounded-3 me-3">
+                            <i class="fas fa-euro-sign text-warning fs-3"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="text-uppercase text-muted mb-1 fw-semibold small">Total des ventes</h6>
+                            <div class="d-flex align-items-baseline">
+                                <h2 class="mb-0 display-6 fw-bold">{{ total_ventes|floatformat:2 }}</h2>
+                                <span class="ms-2 fs-5">FCFA</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    
+        <!-- Carte Ventes du Jour -->
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 rounded-4 overflow-hidden h-100 transition-all hover-scale">
+                <div class="card-body p-4 position-relative">
+                    <div class="position-absolute top-0 end-0 opacity-10">
+                        <svg width="100" height="100" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#e74a3b" d="M41.1,-58.1C53.3,-50.7,63.1,-39.4,68.8,-25.7C74.5,-12,76.1,4.2,70.2,17.6C64.3,31,50.9,41.7,36.3,52.3C21.7,62.9,5.9,73.5,-10.4,75.9C-26.7,78.3,-43.4,72.5,-55.7,61.1C-68.1,49.7,-76.1,32.6,-77.9,14.9C-79.7,-2.8,-75.3,-21.1,-65.1,-35.8C-55,-50.5,-39,-61.6,-23.5,-67.7C-8,-73.8,7,-74.9,21.3,-70.1Z" transform="translate(100 100)"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="d-flex align-items-center position-relative">
+                        <div class="bg-danger-soft p-3 rounded-3 me-3">
+                            <i class="fas fa-calendar-day text-danger fs-3"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="text-uppercase text-muted mb-1 fw-semibold small">Ventes du jour</h6>
+                            <div class="d-flex align-items-baseline">
+                                <h2 class="mb-0 display-6 fw-bold">{{ ventes_du_jour }}</h2>
+                                <span class="ms-2 fs-5">transactions</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-top border-light">
+                        <span class="badge bg-danger-soft text-danger rounded-pill px-3 py-2">
+                            <i class="fas fa-clock me-1 small"></i> {{ now|date:"d F Y" }}
+                        </span>
+                        <small class="text-muted ms-2">dernière mise à jour</small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+    
+    <style>
+        /* Variables CSS personnalisées */
+        :root {
+            --primary-soft: rgba(78, 121, 255, 0.1);
+            --warning-soft: rgba(246, 194, 62, 0.1);
+            --danger-soft: rgba(231, 74, 59, 0.1);
+        }
+        
+        .bg-primary-soft {
+            background-color: var(--primary-soft) !important;
+        }
+        
+        .bg-warning-soft {
+            background-color: var(--warning-soft) !important;
+        }
+        
+        .bg-danger-soft {
+            background-color: var(--danger-soft) !important;
+        }
+        
+        .hover-scale {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        .rounded-4 {
+            border-radius: 1rem !important;
+        }
+        
+        .display-6 {
+            font-size: 2rem;
+        }
+        
+        .border-light {
+            border-color: rgba(0, 0, 0, 0.03) !important;
+        }
+    </style>
+
+<!-- Section Point de Vente -->
+<div class="row g-4 mb-5">
+    <div class="col-12">
+        <div class="card border-0 rounded-4 overflow-hidden shadow-lg">
+            <!-- En-tête avec effet de gradient -->
+            <div class="card-header bg-gradient-primary text-white py-3 border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="h4 mb-0 fw-light"><i class="fas fa-cash-register me-2"></i> POINT DE VENTE</h3>
+                    <div class="d-flex">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" class="form-control border-0 shadow-none" placeholder="Rechercher un produit..." style="background: rgba(255,255,255,0.2); color: white; placeholder-color: rgba(255,255,255,0.5)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Corps de la carte -->
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <!-- Catalogue Produits -->
+                    <div class="col-lg-12">
+                        <div class="p-4">
+                            <!-- Barre de statut -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <span class="badge bg-primary-soft text-primary rounded-pill px-3 py-2">
+                                        <i class="fas fa-boxes me-1"></i> {{ articles|length }} produits disponibles
+                                    </span>
+                                </div>
+                                <div>
+
+
+                                </div>
+                            </div>
+
+                            <!-- Tableau des produits -->
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4" style="width: 60px; border-top-left-radius: 10px;">ID</th>
+                                            <th>PRODUIT</th>
+                                            <th class="text-end">PRIX UNITAIRE</th>
+                                            <th class="text-center pe-4" style="width: 150px; border-top-right-radius: 10px;">STOCK</th>
+                                            <th class="text-center" style="width: 120px;">ACTIONS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for article in articles %}
+                                        <tr class="position-relative">
+                                            <td class="ps-4">
+                                                <span class="text-muted fw-light">#{{ article.id|stringformat:"04d" }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if article.image %}
+                                                    <div class="me-3" style="width: 40px; height: 40px; overflow: hidden; border-radius: 8px;">
+                                                        <img src="{{ article.image.url }}" alt="{{ article.nom }}" class="img-fluid h-100 w-100 object-fit-cover">
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-box text-muted"></i>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="fw-medium">{{ article.nom }}</div>
+                                                        <small class="text-muted">{{ article.categorie|default:"Non catégorisé" }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="fw-bold text-primary">{{ article.prix_unitaire }} FCFA</span>
+                                            </td>
+                                            <td class="text-center pe-4">
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-{{ article.stock_status }}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ article.stock_percentage }}%" 
+                                                         aria-valuenow="{{ article.quantite_stock }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <small class="text-{{ article.stock_status }}">{{ article.stock_message }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{% url 'ajouter_au_panier' article.id %}" class="btn btn-light border" title="Ajouter au panier">
+                                                    <i class="fas fa-cart-plus me-1"></i> 
+                                                </a>
+                                                    
+                                                
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="py-4">
+                                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                                    <h5 class="fw-light text-muted">Aucun produit disponible</h5>
+                                                    <p class="text-muted small">Commencez par ajouter des produits à votre catalogue</p>
+                                                    <button class="btn btn-primary mt-2">
+                                                        <i class="fas fa-plus me-1"></i> Ajouter un produit
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Historique des Ventes -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 rounded-4 overflow-hidden shadow-lg">
+            <!-- En-tête avec onglets -->
+            <div class="card-header bg-white border-0 p-0">
+                <ul class="nav nav-tabs nav-justified" id="salesTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-3" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recent" type="button" role="tab">
+                            <i class="fas fa-clock me-2"></i> RÉCENTES
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-3" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab">
+                            <i class="fas fa-calendar-day me-2"></i> AUJOURD'HUI
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-3" id="month-tab" data-bs-toggle="tab" data-bs-target="#month" type="button" role="tab">
+                            <i class="fas fa-calendar-alt me-2"></i> CE MOIS
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Contenu des onglets -->
+            <div class="card-body p-0">
+                <div class="tab-content" id="salesTabsContent">
+                    <div class="tab-pane fade show active" id="recent" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">N° TRANSACTION</th>
+                                        <th>MONTANT</th>
+                                        <th>DATE</th>
+                                        <th class="text-center">ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vente in ventes %}
+                                    <tr>
+                                        <td class="ps-4 fw-medium">#{{ vente.id|stringformat:"04d" }}</td>
+                                        <td>
+                                            <span class="fw-bold">{{ vente.prixTotal }} FCFA</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">{{ vente.date|date:"d/m/Y" }}</span>
+                                        </td>
+                                       
+                                       
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm shadow-sm">
+                                                <a href="{% url 'detail_vente' vente.id %}" class="btn btn-light border" title="Détails">
+                                                    <i class="fas fa-eye text-primary"></i>
+                                                </a>
+                                                <a href="#" class="btn btn-light border" title="Facture">
+                                                    <i class="fas fa-file-invoice text-success"></i>
+                                                </a>
+                                                <a href="{% url 'supprimer_vente' vente.id %}" class="btn btn-light border" title="Supprimer">
+                                                    <i class="fas fa-trash-alt text-danger"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5">
+                                            <div class="py-4">
+                                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                                <h5 class="fw-light text-muted">Aucune transaction enregistrée</h5>
+                                                <p class="text-muted small">Votre historique de ventes apparaîtra ici</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Les autres onglets auraient un contenu similaire -->
+                </div>
+            </div>
+
+            <!-- Pied de page avec pagination et résumé -->
+            <div class="card-footer bg-white border-0 pt-3 pb-4 px-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="mb-0 small text-muted">Affichage de <span class="fw-bold">1-10</span> sur <span class="fw-bold">{{ ventes|length }}</span> transactions</p>
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link border-0 shadow-none" href="#" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link border-0" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link border-0" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link border-0" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link border-0 shadow-none" href="#">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-download me-1"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles personnalisés -->
+<style>
+    body {
+        background-color: #f8fafc;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .shadow-hover {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    
+    .shadow-hover:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-2px);
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.03);
+    }
+    
+    .badge-light {
+        background-color: #f1f5f9;
+        color: #64748b;
+    }
+    
+    .btn-outline-primary {
+        border-width: 1.5px;
+    }
+    
+    .btn-outline-danger {
+        border-width: 1.5px;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+    
+    .page-link {
+        color: #2563eb;
+    }
+    
+    @media (max-width: 992px) {
+        .border-lg-end {
+            border-right: none !important;
+        }
+    }
+</style>
+
+<!-- Font Awesome pour les icônes -->
+<link rel="stylesheet" href="{% static 'all.min.css' %}">
+
+
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
 {% endblock %}

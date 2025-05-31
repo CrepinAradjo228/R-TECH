@@ -2,64 +2,173 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Mon Panier</h2>
+<div class="container py-5">
+    <!-- En-tête élégant avec ombre portée -->
+    <div class="text-center mb-5">
+        <h2 class="display-4 text-uppercase font-weight-bold text-dark mb-3" style="letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">Votre Panier d'Achats</h2>
+        <div class="divider mx-auto" style="height: 3px; width: 80px; background: linear-gradient(to right, #6c757d, transparent);"></div>
+    </div>
 
     {% if panier %}
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Article</th>
-                    <th>Quantité</th>
-                    <th>Prix Unitaire</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-              {% for article_id, details in panier.items %}
-                  <tr>
-                      <td>{{ details.nom }}</td>  <!-- Affiche le nom de l'article -->
-                      <td>{{ details.quantite }}</td>
-                      <td>{{ details.prix_unitaire }} €</td>
-                      <td>{{ details.quantite|floatformat:2|add:details.prix_unitaire|floatformat:2 }} €</td>
-                  </tr>
-              {% endfor %}
-          </tbody>
-        </table>
+        <!-- Tableau avec bordure subtile et effet au survol -->
+        <div class="table-responsive">
+            <table class="table table-hover border">
+                <thead>
+                    <tr class="bg-light">
+                        <th scope="col" class="py-3 border-0" style="width: 35%;">
+                            <span class="text-uppercase small font-weight-bold">Article</span>
+                        </th>
+                        <th scope="col" class="py-3 border-0 text-center" style="width: 15%;">
+                            <span class="text-uppercase small font-weight-bold">Quantité</span>
+                        </th>
+                        <th scope="col" class="py-3 border-0 text-center" style="width: 15%;">
+                            <span class="text-uppercase small font-weight-bold">Prix Unitaire</span>
+                        </th>
+                        <th scope="col" class="py-3 border-0 text-center" style="width: 15%;">
+                            <span class="text-uppercase small font-weight-bold">Total</span>
+                        </th>
+                        <th scope="col" class="py-3 border-0 text-center" style="width: 20%;">
+                            <span class="text-uppercase small font-weight-bold">Actions</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for article_id, details in panier.items %}
+                        <tr class="border-bottom">
+                            <td class="py-4 align-middle">
+                                <div class="d-flex align-items-center">
+                                    <div class="ml-3">
+                                        <h6 class="mb-0">{{ details.nom }}</h6>
+                                        <small class="text-muted">Ref: {{ article_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 align-middle text-center">
+                                <span class="font-weight-normal">{{ details.quantite }}</span>
+                            </td>
+                            <td class="py-4 align-middle text-center">
+                                <span class="font-weight-normal">{{ details.prix_unitaire }} €</span>
+                            </td>
+                            <td class="py-4 align-middle text-center">
+                                <span class="font-weight-bold">{{ details.total|floatformat:2 }} €</span>
+                            </td>
+                            <td class="py-4 align-middle text-center">
+                                <a href="{% url 'supprimer_du_panier' article_id %}" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i> Supprimer
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <h4 class="text-right">
-            Total à Payer : 
-            <strong>{{ total|floatformat:2 }} €</strong>
-        </h4>
+        <!-- Total avec fond accentué -->
+        <div class="bg-light p-4 rounded mb-4">
+            <div class="row">
+                <div class="col-md-6 offset-md-6">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-uppercase font-weight-bold">Total à Payer</span>
+                        <span class="font-weight-bold" style="font-size: 1.2rem;">{{ total|floatformat:2 }} €</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div class="text-center mt-3">
-            <a href="{% url 'valider_vente' %}" class="btn btn-success btn-lg">Valider la Vente</a>
+        <!-- Boutons avec espacement et effets subtils -->
+        <div class="row mt-5">
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'vider_panier' %}" class="btn btn-outline-danger btn-block py-3" onclick="return confirm('Êtes-vous sûr de vouloir vider tout votre panier ?')">
+                    <i class="fas fa-broom mr-2"></i> Vider le panier
+                </a>
+            </div>
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'ventes' %}" class="btn btn-outline-dark btn-block py-3">
+                    <i class="fas fa-arrow-left mr-2"></i> Continuer vos achats
+                </a>
+            </div>
+            <div class="col-md-4 mb-3">
+                <a href="{% url 'valider_vente' %}" class="btn btn-dark btn-block py-3 text-uppercase font-weight-bold">
+                    Valider la commande <i class="fas fa-chevron-right ml-2"></i>
+                </a>
+            </div>
         </div>
     {% else %}
-        <p class="text-center">Votre panier est vide.</p>
+        <!-- Panier vide avec icône et style soigné -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-shopping-cart fa-4x text-muted"></i>
+            </div>
+            <h4 class="font-weight-light mb-3">Votre panier est vide</h4>
+            <p class="text-muted mb-4">Parcourez nos produits et trouvez ce qui vous plaît</p>
+            <a href="{% url 'ventes' %}" class="btn btn-outline-dark px-4 py-2">
+                <i class="fas fa-store mr-2"></i> Découvrir nos produits
+            </a>
+        </div>
     {% endif %}
 </div>
 
+<!-- Styles personnalisés -->
 <style>
     body {
-        background-color: #f8f9fa;
+        background-color: #fafafa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    table {
-        background-color: #ffffff;
+    
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
     }
-    h2 {
-        color: #007bff;
-        font-weight: bold;
+    
+    .table thead th {
+        border-top: none;
+        border-bottom: 1px solid #dee2e6;
     }
-    .btn-success {
-        background-color: #28a745;
-        border-color: #28a745;
+    
+    .table tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
     }
-    .btn-success:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
+    
+    .btn-dark {
+        background-color: #343a40;
+        border-color: #343a40;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-dark:hover {
+        background-color: #23272b;
+        border-color: #1d2124;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .btn-outline-dark:hover, .btn-outline-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .btn-outline-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+    
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white;
     }
 </style>
 
+<!-- Font Awesome pour les icônes -->
+<link rel="stylesheet" href="{% static 'all.min.css' %}">
+
+<!-- Bootstrap CSS -->
 <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+
+<!-- Script pour confirmation de suppression -->
+<script>
+    function confirmDelete() {
+        return confirm('Êtes-vous sûr de vouloir supprimer cet article du panier ?');
+    }
+</script>
 {% endblock %}

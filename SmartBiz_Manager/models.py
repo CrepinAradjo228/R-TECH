@@ -33,10 +33,27 @@ class Vente(models.Model):
     articles = models.ManyToManyField(Article, related_name='ventes')
     nombreArticles = models.PositiveIntegerField()
     prixTotal = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField()
+    date = models.DateField(auto_now=True)
 
     def _str_(self):
         return f"Vente {self.id} - {self.date}"
+    
+class LigneCommande(models.Model):
+    vente = models.ForeignKey(Vente, related_name='lignes_commande', on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.PROTECT)
+    quantite = models.PositiveIntegerField()
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    @property
+    def total_ligne(self):
+        return self.quantite * self.prix_unitaire
+    
+    def __str__(self):
+        return f"{self.quantite}x {self.article.nom} @ {self.prix_unitaire}€"
+    
+    class Meta:
+        verbose_name = "Ligne de commande"
+        verbose_name_plural = "Lignes de commande"
 
 
 class Facture(models.Model):
