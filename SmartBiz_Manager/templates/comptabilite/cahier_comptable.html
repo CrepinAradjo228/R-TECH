@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Cahier Comptable</h1>
+    
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="date_debut" class="form-label">Date début</label>
+                    <input type="date" id="date_debut" name="date_debut" class="form-control" value="{{ request.GET.date_debut }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="date_fin" class="form-label">Date fin</label>
+                    <input type="date" id="date_fin" name="date_fin" class="form-control" value="{{ request.GET.date_fin }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="journal" class="form-label">Journal</label>
+                    <select id="journal" name="journal" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="VT" {% if request.GET.journal == 'VT' %}selected{% endif %}>Ventes</option>
+                        <option value="AC" {% if request.GET.journal == 'AC' %}selected{% endif %}>Achats</option>
+                        <option value="BQ" {% if request.GET.journal == 'BQ' %}selected{% endif %}>Banque</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des écritures -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Liste des écritures</h5>
+            <a href="{% url 'export_cahier_csv' %}?{{ request.GET.urlencode }}" class="btn btn-sm btn-success">Exporter en CSV</a>
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Journal</th>
+                        <th>Pièce</th>
+                        <th>Compte Débit</th>
+                        <th>Compte Crédit</th>
+                        <th>Libellé</th>
+                        <th class="text-end">Débit</th>
+                        <th class="text-end">Crédit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ecriture in ecritures %}
+                    <tr>
+                        <td>{{ ecriture.date|date:"d/m/Y" }}</td>
+                        <td>{{ ecriture.get_journal_display }}</td>
+                        <td>{% if ecriture.vente %}VTE-{{ ecriture.vente.id }}{% else %}MAN{% endif %}</td>
+                        <td>{{ ecriture.compte_debit }}</td>
+                        <td>{{ ecriture.compte_credit }}</td>
+                        <td>{{ ecriture.libelle }}</td>
+                        <td class="text-end">{{ ecriture.montant|floatformat:2 }} €</td>
+                        <td class="text-end">{{ ecriture.montant|floatformat:2 }} €</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Aucune écriture trouvée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-active">
+                        <th colspan="6">TOTAUX</th>
+                        <th class="text-end">{{ total_debit|floatformat:2 }} €</th>
+                        <th class="text-end">{{ total_credit|floatformat:2 }} €</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="card-footer">
+            <div class="pagination d-flex justify-content-between">
+                <div>
+                    {% if ecritures.has_previous %}
+                        <a href="?page=1&{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary">Première</a>
+                        <a href="?page={{ ecritures.previous_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary">Précédente</a>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="current">
+                        Page {{ ecritures.number }} sur {{ ecritures.paginator.num_pages }}
+                    </span>
+                </div>
+                <div>
+                    {% if ecritures.has_next %}
+                        <a href="?page={{ ecritures.next_page_number }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary">Suivante</a>
+                        <a href="?page={{ ecritures.paginator.num_pages }}&{{ request.GET.urlencode }}" class="btn btn-sm btn-outline-secondary">Dernière</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

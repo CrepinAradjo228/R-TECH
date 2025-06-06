@@ -332,7 +332,7 @@
                                                 <a href="{% url 'detail_vente' vente.id %}" class="btn btn-light border" title="Détails">
                                                     <i class="fas fa-eye text-primary"></i>
                                                 </a>
-                                                <a href="#" class="btn btn-light border" title="Facture">
+                                                <a href="{% url 'visualiser_facture' vente.id %}" class="btn btn-light border" title="Facture">
                                                     <i class="fas fa-file-invoice text-success"></i>
                                                 </a>
                                                 <a href="{% url 'supprimer_vente' vente.id %}" class="btn btn-light border" title="Supprimer">

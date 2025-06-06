@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="mb-0">
+                        <i class="bi bi-exclamation-octagon-fill"></i> Erreur survenue
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        <h4 class="alert-heading">
+                            <i class="bi bi-x-circle-fill"></i> Opération impossible
+                        </h4>
+                        <p>{{ erreur }}</p>
+                        <hr>
+                        <p class="mb-0">
+                            Veuillez contacter le support technique si le problème persiste.
+                        </p>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5><i class="bi bi-info-circle"></i> Que faire maintenant ?</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="bi bi-arrow-return-left"></i> 
+                                <a href="javascript:history.back()" class="text-decoration-none">
+                                    Retourner à la page précédente
+                                </a>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-house"></i> 
+                                <a href="{% url 'ventes' %}" class="text-decoration-none">
+                                    Retour à l'accueil
+                                </a>
+                            </li>
+                            <li class="list-group-item">
+                                <i class="bi bi-envelope"></i> 
+                                <a href="mailto:support@votreboutique.com" class="text-decoration-none">
+                                    Contacter le support technique
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {% if request.user.is_staff %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h5><i class="bi bi-bug"></i> Détails techniques (admin)</h5>
+                        <pre class="bg-dark text-white p-3 rounded">{{ request.build_absolute_uri }}<br>{{ request.method }}<br>User: {{ request.user }}<br>{% now "j F Y H:i" %}</pre>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>Erreur générée le {% now "j F Y à H:i" %}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .list-group-item {
+        transition: all 0.3s ease;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+{% endblock %}

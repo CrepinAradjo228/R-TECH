@@ -67,3 +67,43 @@ class Facture(models.Model):
 
     def _str_(self):
         return f"Facture {self.numeroFacture}"
+    
+
+class EcritureComptable(models.Model):
+    JOURNAL_CHOICES = [
+        ('VT', 'Ventes'),
+        ('AC', 'Achats'),
+        ('BQ', 'Banque'),
+    ]
+    journal = models.CharField(max_length=2, choices=JOURNAL_CHOICES, default='VT')
+    date = models.DateField(auto_now_add=True)
+    compte_debit = models.CharField(max_length=10)  # Ex: "411000" pour Clients
+    compte_credit = models.CharField(max_length=10)  # Ex: "707000" pour Ventes
+    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    libelle = models.CharField(max_length=200)
+    vente = models.ForeignKey('Vente', on_delete=models.CASCADE, null=True, blank=True)
+    facture = models.ForeignKey('Facture', on_delete=models.SET_NULL, null=True, blank=True)
+    
+#Gestiond des budgets et des transactions
+
+class Department(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Budget(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    year = models.IntegerField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.department} - {self.year}"
+
+class Transaction(models.Model):
+    budget = models.ForeignKey(Budget, on_delete=models.CASCADE)
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.budget} - {self.amount} on {self.date}"

@@ -4,7 +4,7 @@ from .forms import ArticleForm
 from .models import Article
 
 from django.shortcuts import render
-from .models import Article, Vente, Facture,LigneCommande
+from .models import Article, Vente, Facture,LigneCommande, EcritureComptable
 from django.contrib import messages
 from datetime import date
 from django.db.models import Sum
@@ -12,7 +12,27 @@ from decimal import Decimal
 from django.utils import timezone
 from django.http import JsonResponse
 from django.utils.timezone import now
-
+from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.http import HttpResponse
+import csv
+from django.db import transaction
+from django.utils import timezone
+import random
+import string
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from django.db import transaction
+from .models import Vente, Article, LigneCommande, Facture, EcritureComptable
+# from .tasks import send_facture_email  # Tâche pour envoyer la facture par email
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from django.template.loader import render_to_string
+from weasyprint import HTML
+from django.shortcuts import render, redirect
+from .models import Budget, Transaction
+from .forms import BudgetForm, TransactionForm
 
 
 
@@ -239,54 +259,261 @@ def afficher_panier(request):
 
     return render(request, 'gestion_vente/panier.html', {'panier': panier, 'total': total})
 
+# def valider_vente(request):
+#     panier = request.session.get('panier', {})
+    
+#     if not panier:
+#         return redirect('afficher_panier')
+    
+#     try:
+#         # Calcul des totaux
+#         total_articles = sum(item['quantite'] for item in panier.values())
+#         prix_total = sum(float(item['prix_unitaire']) * item['quantite'] for item in panier.values())
+        
+#         # Création de la vente (avec vos champs existants)
+#         vente = Vente.objects.create(
+#             nombreArticles=total_articles,
+#             prixTotal=prix_total,
+#             date=timezone.now().date()  # Utilise auto_now=True de votre modèle
+#         )
+        
+#         # Ajout des articles (ManyToMany comme dans votre modèle)
+#         articles_ids = []
+#         for article_id, item in panier.items():
+#             article = Article.objects.get(pk=article_id)
+#             articles_ids.append(article.id)
+            
+#             # Création des lignes de commande détaillées
+#             LigneCommande.objects.create(
+#                 vente=vente,
+#                 article=article,
+#                 quantite=item['quantite'],
+#                 prix_unitaire=item['prix_unitaire']
+#             )
+            
+#             # Mise à jour du stock (optionnel)
+#             article.quantite_stock -= item['quantite']
+#             article.save()
+        
+#         # Ajout des articles à la relation ManyToMany existante
+#         vente.articles.set(articles_ids)
+        
+#         # Nettoyage du panier
+#         del request.session['panier']
+#         request.session.modified = True
+        
+#         return redirect('detail_vente', vente_id=vente.id)
+    
+#     except Exception as e:
+#         print(f"Erreur validation: {str(e)}")
+#         return redirect('afficher_panier')
+
+
+
+def generate_numero_facture():
+    # Génère un numéro de facture aléatoire (ex: FA20240520-ABCD)
+    date_part = timezone.now().strftime("%Y%m%d")
+    random_part = ''.join(random.choices(string.ascii_uppercase, k=4))
+    return f"FA{date_part}-{random_part}"
+
+# def valider_vente(request):
+#     panier = request.session.get('panier', {})
+#     if not panier:
+#         return redirect('afficher_panier')
+    
+#     try:
+#         with transaction.atomic():  # Transaction globale
+#             # 1. Calcul des totaux
+#             total_articles = sum(item['quantite'] for item in panier.values())
+#             prix_total_ht = sum(float(item['prix_unitaire']) * item['quantite'] for item in panier.values())
+#             tva = prix_total_ht * 0.20  # TVA 20%
+#             prix_total_ttc = prix_total_ht + tva
+
+#             # 2. Création de la vente
+#             vente = Vente.objects.create(
+#                 nombreArticles=total_articles,
+#                 prixTotal=prix_total_ttc,
+#                 date=timezone.now().date()
+#             )
+
+#             # 3. Création des lignes de commande + mise à jour stock
+#             articles_ids = []
+#             for article_id, item in panier.items():
+#                 article = Article.objects.get(pk=article_id)
+#                 articles_ids.append(article.id)
+#                 LigneCommande.objects.create(
+#                     vente=vente,
+#                     article=article,
+#                     quantite=item['quantite'],
+#                     prix_unitaire=item['prix_unitaire']
+#                 )
+#                 article.quantite_stock -= item['quantite']
+#                 article.save()
+
+#             vente.articles.set(articles_ids)
+
+#             # 4. Création de la facture (nouveau)
+#             facture = Facture.objects.create(
+#                 numeroFacture=generate_numero_facture(),
+#                 nomClient=request.POST.get('nom_client', 'Client anonyme'),
+#                 telephoneClient=request.POST.get('telephone_client', 'Non renseigné'),
+#                 dateEmission=timezone.now().date(),
+#                 vente=vente,
+#                 montant=prix_total_ttc,
+#                 modePaiement=request.POST.get('mode_paiement', 'ESPÈCES')  # ESPÈCES/CARTE/VIREMENT etc.
+#             )
+
+#             # 5. Écritures comptables (version améliorée)
+#             # a) Écriture de vente (Client HT)
+#             EcritureComptable.objects.create(
+#                 journal='VT',
+#                 date=timezone.now().date(),
+#                 compte_debit='411000',  # Clients
+#                 compte_credit='707000',  # Ventes
+#                 montant=prix_total_ht,
+#                 libelle=f"Facture {facture.numeroFacture} (HT)",
+#                 vente=vente,
+#                 facture=facture
+#             )
+
+#             # b) Écriture TVA
+#             EcritureComptable.objects.create(
+#                 journal='VT',
+#                 date=timezone.now().date(),
+#                 compte_debit='411000',  # Clients
+#                 compte_credit='445710',  # TVA collectée
+#                 montant=tva,
+#                 libelle=f"TVA Facture {facture.numeroFacture}",
+#                 vente=vente,
+#                 facture=facture
+#             )
+
+#             # c) Si paiement immédiat (optionnel)
+#             if facture.modePaiement != 'CREDIT':
+#                 compte_paiement = '512000' if facture.modePaiement == 'VIREMENT' else '531000'  # Banque ou Caisse
+#                 EcritureComptable.objects.create(
+#                     journal='BQ',
+#                     date=timezone.now().date(),
+#                     compte_debit=compte_paiement,
+#                     compte_credit='411000',  # Clients
+#                     montant=prix_total_ttc,
+#                     libelle=f"Paiement Facture {facture.numeroFacture}",
+#                     vente=vente,
+#                     facture=facture
+#                 )
+
+#             # 6. Nettoyage du panier
+#             request.session['panier'] = {}
+            
+#             return redirect('visualiser_facture', facture_id=facture.id)
+
+#     except Exception as e:
+#         # Gestion d'erreur améliorée
+#         return render(request, 'gestion_vente/erreur.html', {
+#             'erreur': f"Erreur lors de la validation : {str(e)}"
+#         }, status=500)
+
+
+
+
 def valider_vente(request):
     panier = request.session.get('panier', {})
-    
     if not panier:
         return redirect('afficher_panier')
-    
+
     try:
-        # Calcul des totaux
-        total_articles = sum(item['quantite'] for item in panier.values())
-        prix_total = sum(float(item['prix_unitaire']) * item['quantite'] for item in panier.values())
-        
-        # Création de la vente (avec vos champs existants)
-        vente = Vente.objects.create(
-            nombreArticles=total_articles,
-            prixTotal=prix_total,
-            date=timezone.now().date()  # Utilise auto_now=True de votre modèle
-        )
-        
-        # Ajout des articles (ManyToMany comme dans votre modèle)
-        articles_ids = []
-        for article_id, item in panier.items():
-            article = Article.objects.get(pk=article_id)
-            articles_ids.append(article.id)
-            
-            # Création des lignes de commande détaillées
-            LigneCommande.objects.create(
-                vente=vente,
-                article=article,
-                quantite=item['quantite'],
-                prix_unitaire=item['prix_unitaire']
+        with transaction.atomic():
+            # 1. Calcul des totaux
+            total_articles = sum(item['quantite'] for item in panier.values())
+            prix_total_ht = sum(float(item['prix_unitaire']) * item['quantite'] for item in panier.values())
+            tva = prix_total_ht * 0.20  # TVA 20%
+            prix_total_ttc = prix_total_ht + tva
+
+            # 2. Création de la vente
+            vente = Vente.objects.create(
+                nombreArticles=total_articles,
+                prixTotal=prix_total_ttc,
+                date=timezone.now().date()
             )
-            
-            # Mise à jour du stock (optionnel)
-            article.quantite_stock -= item['quantite']
-            article.save()
-        
-        # Ajout des articles à la relation ManyToMany existante
-        vente.articles.set(articles_ids)
-        
-        # Nettoyage du panier
-        del request.session['panier']
-        request.session.modified = True
-        
-        return redirect('detail_vente', vente_id=vente.id)
-    
+
+            # 3. Création des lignes de commande + mise à jour stock
+            for article_id, item in panier.items():
+                article = Article.objects.get(pk=article_id)
+                LigneCommande.objects.create(
+                    vente=vente,
+                    article=article,
+                    quantite=item['quantite'],
+                    prix_unitaire=item['prix_unitaire']
+                )
+                article.quantite_stock -= item['quantite']
+                article.save()
+
+            # 4. Création de la facture
+            facture = Facture.objects.create(
+                numeroFacture=generate_numero_facture(),
+                nomClient=request.POST.get('nom_client', 'Client anonyme'),
+                telephoneClient=request.POST.get('telephone_client', 'Non renseigné'),
+                dateEmission=timezone.now().date(),
+                vente=vente,
+                montant=prix_total_ttc,
+                modePaiement=request.POST.get('mode_paiement', 'ESPÈCES')
+            )
+
+            # 5. Écritures comptables
+            create_ecritures_comptables(vente, facture, prix_total_ht, tva)
+
+            # 6. Nettoyage du panier
+            request.session['panier'] = {}
+
+            # Envoi de la facture par email (tâche asynchrone)
+            # send_facture_email.delay(facture.id)
+
+            return redirect('visualiser_facture', facture_id=facture.id)
+
     except Exception as e:
-        print(f"Erreur validation: {str(e)}")
-        return redirect('afficher_panier')
+        return render(request, 'gestion_vente/erreur.html', {
+            'erreur': f"Erreur lors de la validation : {str(e)}"
+        }, status=500)
+        
+
+def create_ecritures_comptables(vente, facture, prix_total_ht, tva):
+    # a) Écriture de vente (Client HT)
+    EcritureComptable.objects.create(
+        journal='VT',
+        date=timezone.now().date(),
+        compte_debit='411000',  # Clients
+        compte_credit='707000',  # Ventes
+        montant=prix_total_ht,
+        libelle=f"Facture {facture.numeroFacture} (HT)",
+        vente=vente,
+        facture=facture
+    )
+
+    # b) Écriture TVA
+    EcritureComptable.objects.create(
+        journal='VT',
+        date=timezone.now().date(),
+        compte_debit='411000',  # Clients
+        compte_credit='445710',  # TVA collectée
+        montant=tva,
+        libelle=f"TVA Facture {facture.numeroFacture}",
+        vente=vente,
+        facture=facture
+    )
+
+    # c) Si paiement immédiat (optionnel)
+    if facture.modePaiement != 'CREDIT':
+        compte_paiement = '512000' if facture.modePaiement == 'VIREMENT' else '531000'
+        EcritureComptable.objects.create(
+            journal='BQ',
+            date=timezone.now().date(),
+            compte_debit=compte_paiement,
+            compte_credit='411000',  # Clients
+            montant=facture.montant,
+            libelle=f"Paiement Facture {facture.numeroFacture}",
+            vente=vente,
+            facture=facture
+        )
 
 def detail_vente(request, vente_id):
     vente = get_object_or_404(Vente, pk=vente_id)
@@ -311,6 +538,42 @@ def supprimer_vente(request, vente_id):
         return redirect('ventes')
     
     return render(request, 'gestion_vente/supprimer_vente.html', {'vente': vente})
+
+
+
+
+def visualiser_facture(request, vente_id):
+    vente = get_object_or_404(Vente, pk=vente_id)
+    facture = get_object_or_404(Facture, vente=vente)
+    
+    # Calcul des totaux pour le template
+    context = {
+        'facture': facture,
+        'COMPANY_NAME': "Votre Entreprise",
+        'COMPANY_ADDRESS': "123 Rue de Commerce\n75001 Paris",
+        'COMPANY_SIRET': "123 456 789 00010",
+        'COMPANY_PHONE': "+33 1 23 45 67 89",
+        'COMPANY_IBAN': "FR76 1234 5678 9123 4567 8910 123",
+        'COMPANY_LEGAL_MENTIONS': "SARL au capital de 10 000 € - RCS Paris 123 456 789 - TVA Intracommunautaire FR 12 123456789",
+    }
+    return render(request, 'gestion_vente/facture.html', context)
+
+
+
+def export_facture_pdf(request, facture_id):
+    facture = get_object_or_404(Facture, pk=facture_id)
+    html_string = render_to_string('facture.html', {
+        'facture': facture,
+        # ... mêmes variables que la vue HTML ...
+    })
+    
+    html = HTML(string=html_string, base_url=request.build_absolute_uri())
+    pdf = html.write_pdf()
+    
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="facture_{facture.numeroFacture}.pdf"'
+    return response
+
 
 def dashboard(request):
     return render(request, 'gestion_vente/dashboard_vente.html')
@@ -356,3 +619,106 @@ def supprimer_article(request, pk):
     return render(request, 'gestion_articles/supprimer_article.html', {'article': article})
 
 
+
+
+def cahier_comptable(request):
+    # Récupération des paramètres de filtrage
+    date_debut = request.GET.get('date_debut')
+    date_fin = request.GET.get('date_fin')
+    journal = request.GET.get('journal')
+
+    # Construction de la requête filtrée
+    ecritures = EcritureComptable.objects.all().order_by('-date')
+    
+    if date_debut:
+        ecritures = ecritures.filter(date__gte=date_debut)
+    if date_fin:
+        ecritures = ecritures.filter(date__lte=date_fin)
+    if journal:
+        ecritures = ecritures.filter(journal=journal)
+
+    # Calcul des totaux
+    total_debit = ecritures.aggregate(Sum('montant'))['montant__sum'] or 0
+    total_credit = total_debit  # Partie double => toujours équilibré
+
+    # Pagination (20 écritures par page)
+    paginator = Paginator(ecritures, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'ecritures': page_obj,
+        'total_debit': total_debit,
+        'total_credit': total_credit,
+    }
+    return render(request, 'comptabilite/cahier_comptable.html', context)
+
+
+
+
+
+
+def export_cahier_csv(request):
+    # Récupère les mêmes filtres que la vue cahier_comptable
+    ecritures = EcritureComptable.objects.all()
+    
+    # Crée la réponse HTTP avec le type CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="cahier_comptable.csv"'
+    
+    writer = csv.writer(response, delimiter=';')
+    # En-tête du CSV
+    writer.writerow(['Date', 'Journal', 'Compte Débit', 'Compte Crédit', 'Libellé', 'Débit', 'Crédit'])
+    
+    # Données
+    for ecriture in ecritures:
+        writer.writerow([
+            ecriture.date.strftime("%d/%m/%Y"),
+            ecriture.get_journal_display(),
+            ecriture.compte_debit,
+            ecriture.compte_credit,
+            ecriture.libelle,
+            str(ecriture.montant).replace('.', ','),
+            str(ecriture.montant).replace('.', ',')
+        ])
+    
+    return response
+
+
+
+def create_budget(request):
+    if request.method == 'POST':
+        form = BudgetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('budget_list')
+    else:
+        form = BudgetForm()
+    return render(request, 'create_budget.html', {'form': form})
+
+def create_transaction(request):
+    if request.method == 'POST':
+        form = TransactionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('transaction_list')
+    else:
+        form = TransactionForm()
+    return render(request, 'create_transaction.html', {'form': form})
+
+def budget_list(request):
+    budgets = Budget.objects.all()
+    return render(request, 'budget_list.html', {'budgets': budgets})
+
+def budget_summary(request):
+    budgets = Budget.objects.all()
+    budget_data = []
+    for budget in budgets:
+        total_transactions = Transaction.objects.filter(budget=budget).aggregate(Sum('amount'))['amount__sum'] or 0
+        variance = budget.amount - total_transactions
+        budget_data.append({
+            'budget': budget,
+            'total_transactions': total_transactions,
+            'variance': variance,
+        })
+    return render(request, 'budget_summary.html', {'budget_data': budget_data})

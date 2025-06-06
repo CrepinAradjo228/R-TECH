@@ -22,9 +22,12 @@ urlpatterns = [
     path('panier/valider/', views.valider_vente, name='valider_vente'),
     path('vente/<int:vente_id>/', views.detail_vente, name='detail_vente'),
     path('supprimer_vente/<int:vente_id>/', views.supprimer_vente, name='supprimer_vente'),
-
+    path('ventes/facture/<int:vente_id>/', views.visualiser_facture, name='visualiser_facture'),
+    path('ventes/facture/telecharger/<int:facture_id>/', views.export_facture_pdf, name='export_facture_pdf'),
+    path('voir_cahier_comptable/', views.cahier_comptable, name='voir_cahier_comptable'),
+    path('export-cahier-csv/', views.export_cahier_csv, name='export_cahier_csv'),
         
-
+    #Gestions des articles 
 
 
     path('articles/', views.articles, name='articles'),
