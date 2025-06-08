@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #4CAF50;
+        color: white;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+    .variance {
+        font-weight: bold;
+    }
+    .positive {
+        color: green;
+    }
+    .negative {
+        color: red;
+    }
+</style>
+
+<h1>État du Budget</h1>
+
+<table>
+    <tr>
+        <th>Département</th>
+        <th>Montant Prévu</th>
+        <th>Montant Réel</th>
+        <th>Écart</th>
+    </tr>
+    {% for data in budget_data %}
+        <tr>
+            <td>{{ data.budget.department }}</td>
+            <td>{{ data.budget.amount|floatformat:2 }} €</td>
+            <td>{{ data.total_transactions|floatformat:2 }} €</td>
+            <td class="variance {% if data.variance >= 0 %}positive{% else %}negative{% endif %}">
+                {{ data.variance|floatformat:2 }} €
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

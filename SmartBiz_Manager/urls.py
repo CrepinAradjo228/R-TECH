@@ -26,7 +26,22 @@ urlpatterns = [
     path('ventes/facture/telecharger/<int:facture_id>/', views.export_facture_pdf, name='export_facture_pdf'),
     path('voir_cahier_comptable/', views.cahier_comptable, name='voir_cahier_comptable'),
     path('export-cahier-csv/', views.export_cahier_csv, name='export_cahier_csv'),
-        
+    
+    #Gstion des budgets et departements 
+    path('budget/create/', views.create_budget, name='create_budget'),
+    path('transactions/create/', views.create_transaction, name='create_transaction'),
+    path('budgets/', views.budget_list, name='budget_list'),
+    path('budget/summary/', views.budget_summary, name='budget_summary'),
+    path('department/create/', views.create_department, name='create_department'),
+    path('departments/', views.department_list, name='department_list'),
+    path('comptabilite/', views.comptabilite, name='comptabilite'),
+    
+    #Gestion des transactions 
+    path('transactions/', views.transaction_list , name='transaction_list'),
+    
+    # path('transactions/<int:pk>/update/', TransactionUpdateView.as_view(), name='transaction_update'),
+    # path('transactions/<int:pk>/delete/', TransactionDeleteView.as_view(), name='transaction_delete'),
+       
     #Gestions des articles 
 
 

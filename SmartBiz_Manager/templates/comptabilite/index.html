@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - Gestion Budgétaire{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Bienvenue dans le Système de Gestion Budgétaire</h1>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Ajouter un Département</h5>
+                    <p class="card-text">Créez un nouveau département pour gérer vos budgets.</p>
+                    <a href="{% url 'create_department' %}" class="btn btn-primary">Créer Département</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Créer un Budget</h5>
+                    <p class="card-text">Établissez un budget pour chaque département.</p>
+                    <a href="{% url 'create_budget' %}" class="btn btn-primary">Créer Budget</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Créer une Transaction</h5>
+                    <p class="card-text">Enregistrez une nouvelle transaction pour un budget.</p>
+                    <a href="{% url 'create_transaction' %}" class="btn btn-primary">Créer Transaction</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{% url 'budget_list' %}" class="btn btn-secondary">Voir la Liste des Budgets</a>
+        <a href="#" class="btn btn-secondary">Voir la Liste des Départements</a>
+        <a href="#" class="btn btn-secondary">Voir la Liste des Transactions</a>
+        <a href="{% url 'voir_cahier_comptable' %}" class="btn btn-secondary">Voir le Cahier Comptable</a>
+
+    </div>
+</div>
+{% endblock %}

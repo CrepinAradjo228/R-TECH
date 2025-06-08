@@ -1,5 +1,5 @@
 from django import forms
-from .models import Article, Categorie, Budget, Transaction
+from .models import Article, Categorie, Budget, Transaction, Department
 
 class ArticleForm(forms.ModelForm):
     class Meta:
@@ -20,3 +20,11 @@ class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['budget', 'date', 'amount']
+        
+class DepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Nom du Département', 'class': 'form-control'}),
+        }

@@ -3,6 +3,16 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
+    <form method="get" class="mb-4">
+        <label for="mois-select" class="form-label">Choisir le mois :</label>
+        <select id="mois-select" name="mois" onchange="this.form.submit()" class="form-select" style="width: 200px;">
+            <option value="">Tous les mois</option>
+            {% for m in mois_disponibles %}
+                <option value="{{ m }}" {% if m == mois_selectionne %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
     <h2 class="mb-4">Tableau de bord analytique</h2>
     
     <!-- Summary Cards -->
@@ -11,7 +21,7 @@
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Ventes totales</h5>
-                    <h2 class="card-text">45,678 €</h2>
+                    <h2 class="card-text">{{ chiffre_affaire }} €</h2>
                 </div>
             </div>
         </div>
@@ -19,7 +29,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Articles vendus</h5>
-                    <h2 class="card-text">1,234</h2>
+                    <h2 class="card-text">{{ total_articles_vendus }}</h2>
                 </div>
             </div>
         </div>
@@ -27,7 +37,7 @@
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Clients</h5>
-                    <h2 class="card-text">789</h2>
+                    <h2 class="card-text">{{ total_clients }}</h2>
                 </div>
             </div>
         </div>
@@ -35,7 +45,7 @@
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5 class="card-title">Bénéfice net</h5>
-                    <h2 class="card-text">12,345 €</h2>
+                    <h2 class="card-text">{{ benefice_net }} €</h2>
                 </div>
             </div>
         </div>
@@ -85,67 +95,45 @@
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{{ mois_labels|json_script:"monthly-sales-labels" }}
+{{ ventes_mensuelles|json_script:"monthly-sales-data" }}
+{{ produits|json_script:"products-data" }}
+{{ quantites|json_script:"quantities-data" }}
+
 <script>
-    // Sales Chart
-    new Chart(document.getElementById('salesChart'), {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
-            datasets: [{
-                label: 'Ventes mensuelles',
-                data: [12000, 19000, 15000, 25000, 22000, 30000],
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        }
-    });
+    let moisLabels = JSON.parse(document.getElementById('monthly-sales-labels').textContent);
+    let ventesMensuelles = JSON.parse(document.getElementById('monthly-sales-data').textContent);
+    let produits = JSON.parse(document.getElementById('products-data').textContent);
+    let quantites = JSON.parse(document.getElementById('quantities-data').textContent);
 
-    // Products Chart
-    new Chart(document.getElementById('productsChart'), {
-        type: 'bar',
-        data: {
-            labels: ['Produit A', 'Produit B', 'Produit C', 'Produit D', 'Produit E'],
-            datasets: [{
-                label: 'Unités vendues',
-                data: [150, 120, 100, 80, 50],
-                backgroundColor: 'rgba(54, 162, 235, 0.5)'
-            }]
-        }
-    });
+    if (document.getElementById('salesChart')) {
+        new Chart(document.getElementById('salesChart'), {
+            type: 'line',
+            data: {
+                labels: moisLabels,
+                datasets: [{
+                    label: 'Ventes mensuelles',
+                    data: ventesMensuelles,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.3
+                }]
+            }
+        });
+    }
 
-    // Pie Chart
-    new Chart(document.getElementById('pieChart'), {
-        type: 'pie',
-        data: {
-            labels: ['En ligne', 'En magasin', 'Téléphone'],
-            datasets: [{
-                data: [300, 200, 100],
-                backgroundColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 162, 235)',
-                    'rgb(255, 205, 86)'
-                ]
-            }]
-        }
-    });
-
-    // Trend Chart
-    new Chart(document.getElementById('trendChart'), {
-        type: 'line',
-        data: {
-            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-            datasets: [{
-                label: 'Cette semaine',
-                data: [1200, 1900, 1500, 2500, 2200, 3000, 2800],
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }, {
-                label: 'Semaine dernière',
-                data: [1000, 1700, 1400, 2300, 2000, 2800, 2600],
-                borderColor: 'rgb(255, 99, 132)',
-                tension: 0.1
-            }]
-        }
-    });
+    if (document.getElementById('productsChart')) {
+        new Chart(document.getElementById('productsChart'), {
+            type: 'bar',
+            data: {
+                labels: produits,
+                datasets: [{
+                    label: 'Unités vendues',
+                    data: quantites,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                }]
+            }
+        });
+    }
 </script>
+
 {% endblock %}

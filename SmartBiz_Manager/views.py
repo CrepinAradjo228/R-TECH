@@ -31,8 +31,9 @@ from rest_framework.decorators import api_view
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from django.shortcuts import render, redirect
-from .models import Budget, Transaction
-from .forms import BudgetForm, TransactionForm
+from .models import Budget, Transaction, Department
+from .forms import BudgetForm, TransactionForm, DepartmentForm
+import json
 
 
 
@@ -595,9 +596,73 @@ def ajout_article(request):
     return render(request, 'gestion_articles/ajout_article.html', {'form': form})
 
 
+
 def analyse(request):
-       
-    return render(request, 'analyse/dashboard.html')
+    mois_selectionne = request.GET.get('mois', '')  # format attendu : 'YYYY-MM'
+
+    # Récupération de toutes les ventes
+    ventes = Vente.objects.all()
+
+    # Extraction des mois disponibles dynamiquement au format 'YYYY-MM'
+    mois_disponibles = ventes.dates('date', 'month').values_list('date', flat=True)
+    mois_disponibles = sorted(set(dt.strftime('%Y-%m') for dt in mois_disponibles))
+
+    # Filtrer selon le mois sélectionné
+    if mois_selectionne and mois_selectionne in mois_disponibles:
+        annee, mois = map(int, mois_selectionne.split('-'))
+        ventes_filtrees = ventes.filter(date__year=annee, date__month=mois)
+    else:
+        ventes_filtrees = ventes
+
+    # Calcul du chiffre d'affaires total (filtré)
+    chiffre_affaire = ventes_filtrees.aggregate(total=Sum('prixTotal'))['total'] or Decimal('0')
+
+    # Total articles vendus (filtré via lignes commandes liées aux ventes filtrées)
+    ids_ventes = ventes_filtrees.values_list('id', flat=True)
+    total_articles_vendus = LigneCommande.objects.filter(vente_id__in=ids_ventes).aggregate(total=Sum('quantite'))['total'] or 0
+
+    # Nombre de clients (ventes uniques) dans la période
+    total_clients = ventes_filtrees.count()
+
+    # Bénéfice net : 30% du chiffre d'affaire
+    benefice_net = chiffre_affaire * Decimal('0.3')
+
+    # Ventes par mois (pour tous les mois disponibles, ou filtrés ? ici on fait tous)
+    ventes_par_mois = {}
+    for vente in ventes:
+        mois_str = vente.date.strftime('%b %Y')  # ex: "Mai 2025"
+        ventes_par_mois[mois_str] = ventes_par_mois.get(mois_str, 0) + float(vente.prixTotal)
+
+    mois_labels = list(ventes_par_mois.keys())
+    ventes_mensuelles = list(ventes_par_mois.values())
+
+    # Top 5 produits (sur toutes les ventes, ou filtrées ? ici sur ventes filtrées)
+    lignes = LigneCommande.objects.filter(vente_id__in=ids_ventes).values('article__nom').annotate(
+        quantite_totale=Sum('quantite')
+    ).order_by('-quantite_totale')[:5]
+
+    produits = [ligne['article__nom'] for ligne in lignes]
+    quantites = [ligne['quantite_totale'] for ligne in lignes]
+
+    context = {
+        'chiffre_affaire': chiffre_affaire,
+        'total_articles_vendus': total_articles_vendus,
+        'total_clients': total_clients,
+        'benefice_net': benefice_net,
+
+        'mois_labels': json.dumps(mois_labels),
+        'ventes_mensuelles': json.dumps(ventes_mensuelles),
+
+        'produits': json.dumps(produits),
+        'quantites': json.dumps(quantites),
+
+        'mois_selectionne': mois_selectionne,
+        'mois_disponibles': mois_disponibles,
+    }
+
+    return render(request, 'analyse/dashboard.html', context)
+
+
 
 
 def modifier_article(request, pk):
@@ -617,6 +682,7 @@ def supprimer_article(request, pk):
         article.delete()
         return redirect('articles')
     return render(request, 'gestion_articles/supprimer_article.html', {'article': article})
+
 
 
 
@@ -685,6 +751,15 @@ def export_cahier_csv(request):
     return response
 
 
+def create_department(request):
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('department_list')
+    else:
+        form = DepartmentForm()
+    return render(request, 'comptabilite/creer_departement.html', {'form': form})
 
 def create_budget(request):
     if request.method == 'POST':
@@ -694,7 +769,7 @@ def create_budget(request):
             return redirect('budget_list')
     else:
         form = BudgetForm()
-    return render(request, 'create_budget.html', {'form': form})
+    return render(request, 'comptabilite/creer_budget.html', {'form': form})
 
 def create_transaction(request):
     if request.method == 'POST':
@@ -704,11 +779,11 @@ def create_transaction(request):
             return redirect('transaction_list')
     else:
         form = TransactionForm()
-    return render(request, 'create_transaction.html', {'form': form})
+    return render(request, 'comptabilite/creer_transaction.html', {'form': form})
 
 def budget_list(request):
-    budgets = Budget.objects.all()
-    return render(request, 'budget_list.html', {'budgets': budgets})
+    budgets = Budget.objects.select_related('department').all()  # Utiliser select_related pour optimiser les requêtes
+    return render(request, 'comptabilite/budget_list.html', {'budgets': budgets})
 
 def budget_summary(request):
     budgets = Budget.objects.all()
@@ -721,4 +796,55 @@ def budget_summary(request):
             'total_transactions': total_transactions,
             'variance': variance,
         })
-    return render(request, 'budget_summary.html', {'budget_data': budget_data})
+    return render(request, 'comptabilite/budget_summary.html', {'budget_data': budget_data})
+
+
+def department_list(request):
+    departments = Department.objects.all()
+    return render(request, 'comptabilite/department_list.html', {'departments': departments})
+
+def comptabilite (request):
+    return render(request, 'comptabilite/index.html')
+
+
+def transaction_list(request):
+    # Récupérer le queryset de base
+    queryset = Transaction.objects.select_related('budget__department')
+    
+    # Filtrage par budget
+    budget_id = request.GET.get('budget')
+    if budget_id:
+        queryset = queryset.filter(budget_id=budget_id)
+    
+    # Filtrage par date
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    if date_from:
+        queryset = queryset.filter(date__gte=date_from)
+    if date_to:
+        queryset = queryset.filter(date__lte=date_to)
+    
+    # Trier les transactions
+    queryset = queryset.order_by('-date')
+    
+    # Pagination
+    paginator = Paginator(queryset, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Calcul du total
+    total = queryset.aggregate(total=Sum('amount'))['total'] or 0
+    
+    context = {
+        'transactions': page_obj,
+        'total': total,
+        'budgets': Budget.objects.all().select_related('department'),
+        'filter_params': {
+            'budget': request.GET.get('budget', ''),
+            'date_from': request.GET.get('date_from', ''),
+            'date_to': request.GET.get('date_to', ''),
+        }
+    }
+    
+    return render(request, 'comptabilite/list.html', context)

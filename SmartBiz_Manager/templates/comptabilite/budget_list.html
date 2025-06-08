@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    .budget-list {
+        max-width: 600px;
+        margin: auto;
+        padding: 0;
+    }
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    li {
+        background-color: #fff;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .amount {
+        font-weight: bold;
+        color: #4CAF50;
+        font-size: 1.1em;
+    }
+    .budget-name {
+        font-size: 1.2em;
+        color: #333;
+    }
+</style>
+
+<h1>Liste des Budgets</h1>
+
+<div class="budget-list">
+    <ul>
+        {% for budget in budgets %}
+            <li>
+                <span class="budget-name">{{ budget.department.name }}</span> 
+                <span class="amount">{{ budget.amount|floatformat:2 }} FCFA</span>
+            </li>
+        {% empty %}
+            <li>Aucun budget disponible.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

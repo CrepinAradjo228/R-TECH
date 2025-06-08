@@ -35,7 +35,7 @@ class Vente(models.Model):
     prixTotal = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(auto_now=True)
 
-    def _str_(self):
+    def __str__(self):
         return f"Vente {self.id} - {self.date}"
     
 class LigneCommande(models.Model):
@@ -104,6 +104,7 @@ class Transaction(models.Model):
     budget = models.ForeignKey(Budget, on_delete=models.CASCADE)
     date = models.DateField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(default="aucune description")
 
     def __str__(self):
         return f"{self.budget} - {self.amount} on {self.date}"
